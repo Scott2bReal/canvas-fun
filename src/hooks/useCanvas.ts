@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react"
+import { useDomRect } from "./useDomRect"
 
 class CanvasError extends Error {
   constructor(message: string) {
@@ -11,6 +12,7 @@ export function useCanvas(
   draw: (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => void,
 ) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const canvasRect = useDomRect(canvasRef)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -22,14 +24,12 @@ export function useCanvas(
     const dpr = window.devicePixelRatio || 1
 
     const resizeCanvas = () => {
-      const rect = canvas.getBoundingClientRect()
-      canvas.width = rect.width * dpr
-      canvas.height = rect.height * dpr
+      canvas.width = canvasRect.width * dpr
+      canvas.height = canvasRect.height * dpr
       ctx.scale(dpr, dpr)
     }
 
     resizeCanvas()
-    window.addEventListener("resize", resizeCanvas)
 
     let animationId: number
     const render = () => {
@@ -40,10 +40,9 @@ export function useCanvas(
     render()
 
     return () => {
-      window.removeEventListener("resize", resizeCanvas)
       cancelAnimationFrame(animationId)
     }
-  }, [draw])
+  }, [draw, canvasRect.width, canvasRect.height])
 
   return canvasRef
 }

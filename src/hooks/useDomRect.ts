@@ -1,30 +1,34 @@
-import { useMotionValue, type MotionValue } from "motion/react"
-import type { RefObject } from "react"
-import { useEffect } from "react"
+import { cancelFrame, frame } from "motion"
+import { useEffect, type RefObject } from "react"
+import { proxy } from "valtio"
+import { useConstant } from "./useConstant"
 
-interface ElementRectMotionValues {
-  x: MotionValue<number>
-  y: MotionValue<number>
-  width: MotionValue<number>
-  height: MotionValue<number>
-  top: MotionValue<number>
-  right: MotionValue<number>
-  bottom: MotionValue<number>
-  left: MotionValue<number>
+export type Rect = {
+  top: number
+  left: number
+  bottom: number
+  right: number
+  centerX: number
+  centerY: number
+  width: number
+  height: number
 }
 
-function useElementRect<T extends HTMLElement>(
-  ref: RefObject<T | null>,
-  trackScroll: boolean = false,
-): ElementRectMotionValues {
-  const x = useMotionValue(0)
-  const y = useMotionValue(0)
-  const width = useMotionValue(0)
-  const height = useMotionValue(0)
-  const top = useMotionValue(0)
-  const right = useMotionValue(0)
-  const bottom = useMotionValue(0)
-  const left = useMotionValue(0)
+const createEmpyRect = (): Rect => ({
+  top: 0,
+  left: 0,
+  bottom: 0,
+  right: 0,
+  centerX: 0,
+  centerY: 0,
+  width: 0,
+  height: 0,
+})
+
+export const useDomRect = (ref: RefObject<HTMLElement | null>) => {
+  const rect = useConstant(() => {
+    return proxy<Rect>(createEmpyRect())
+  })
 
   useEffect(() => {
     const element = ref.current
@@ -32,37 +36,19 @@ function useElementRect<T extends HTMLElement>(
 
     const updateRect = () => {
       const domRect = element.getBoundingClientRect()
-      x.set(domRect.x)
-      y.set(domRect.y)
-      width.set(domRect.width)
-      height.set(domRect.height)
-      top.set(domRect.top)
-      right.set(domRect.right)
-      bottom.set(domRect.bottom)
-      left.set(domRect.left)
+      rect.top = domRect.top
+      rect.left = domRect.left
+      rect.bottom = domRect.bottom
+      rect.right = domRect.right
+      rect.width = domRect.width
+      rect.height = domRect.height
+      rect.centerX = domRect.left + domRect.width / 2
+      rect.centerY = domRect.top + domRect.height / 2
     }
 
-    // Initial measurement
-    updateRect()
+    frame.read(updateRect, true)
+    return () => cancelFrame(updateRect)
+  }, [ref, rect])
 
-    // Use ResizeObserver for element size changes
-    const resizeObserver = new ResizeObserver(updateRect)
-    resizeObserver.observe(element)
-
-    // Track scroll if needed (for viewport-relative coordinates)
-    if (trackScroll) {
-      window.addEventListener("scroll", updateRect, true)
-    }
-
-    return () => {
-      resizeObserver.disconnect()
-      if (trackScroll) {
-        window.removeEventListener("scroll", updateRect, true)
-      }
-    }
-  }, [ref, trackScroll, x, y, width, height, top, right, bottom, left])
-
-  return { x, y, width, height, top, right, bottom, left }
+  return rect
 }
-
-export default useElementRect
