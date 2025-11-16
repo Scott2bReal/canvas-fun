@@ -1,0 +1,18 @@
+@import "./fonts.css";
+@import "tailwindcss";
+
+@theme {
+  --color-ochre: #cb9d06;
+  --color-yellow: #f2cc18;
+  --color-dark-green: #2a3829;
+  --color-brown: #86573b;
+  --color-medium-green: #465946;
+  --color-orange: #ee6624;
+
+  --font-primary: "Montserrat", sans-serif;
+  --font-italic: "Montserrat Italic", sans-serif;
+}
+
+html {
+  font-family: var(--font-primary);
+}

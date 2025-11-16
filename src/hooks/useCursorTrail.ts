@@ -1,6 +1,6 @@
 import { mix } from "motion"
 import { useReducedMotionConfig } from "motion/react"
-import { useCallback, useRef, type RefObject } from "react"
+import { useCallback, useMemo, useRef, type RefObject } from "react"
 import { proxy } from "valtio"
 import { hugeEaseOut, lerp } from "../utils/interpolation"
 import type { Coordinate } from "../utils/types"
@@ -93,18 +93,23 @@ const useBalls = (options?: UseCursorTrailOptions) => {
     initialBallRadius = 10,
   } = options ?? {}
 
-  const balls: Ball[] = useConstant(() =>
-    Array.from({ length: numBalls }, () =>
-      proxy<Ball>({
-        x: 0,
-        y: 0,
-        radius: initialBallRadius,
-        color: initialBallColor,
-      }),
-    ),
+  const balls: Ball[] = useMemo(
+    () =>
+      Array.from({ length: numBalls }, () =>
+        proxy<Ball>({
+          x: 0,
+          y: 0,
+          radius: initialBallRadius,
+          color: initialBallColor,
+        }),
+      ),
+    [numBalls, initialBallColor, initialBallRadius],
   )
-  const ballTargets = useConstant(() =>
-    Array.from({ length: numBalls }, () => proxy<Coordinate>({ x: 0, y: 0 })),
+
+  const ballTargets = useMemo(
+    () =>
+      Array.from({ length: numBalls }, () => proxy<Coordinate>({ x: 0, y: 0 })),
+    [numBalls],
   )
 
   const cursor = useCursor()
