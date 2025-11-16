@@ -17,11 +17,15 @@ const useDetectCursorMovement = () => {
   const isMoving = useConstant(() =>
     proxy<{ current: boolean }>({ current: false }),
   )
+  const velocitySquared = useConstant(() =>
+    proxy<{ current: number }>({ current: 0 }),
+  )
   const moveThreshold = 0.1
   const movementTimeout = useRef<number | null>(null)
 
   return {
     isMoving,
+    velocitySquared,
     updateCursorMovement: () => {
       const dx = cursor.x - lastCursorPos.x
       const dy = cursor.y - lastCursorPos.y
@@ -128,8 +132,8 @@ const useCursorTrail = ({
 
 export const CursorTrail = () => {
   const { balls, updateBalls, ballColor } = useCursorTrail({
-    numBalls: 2000,
-    lerpFactor: 0.7,
+    numBalls: 4000,
+    lerpFactor: 0.85,
     ballColor: "purple",
     initialBallRadius: 10,
   })
