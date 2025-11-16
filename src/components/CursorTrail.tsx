@@ -3,8 +3,6 @@ import { useRef } from "react"
 import { useCursorTrail } from "../hooks/useCursorTrail"
 import { useDomRect } from "../hooks/useDomRect"
 
-const initialBallColor = "#465946"
-
 export const CursorTrail = ({ showFps = false }: { showFps?: boolean }) => {
   const jsonRef = useRef<HTMLPreElement>(null)
   const targetRef = useRef<HTMLDivElement>(null)
@@ -17,7 +15,6 @@ export const CursorTrail = ({ showFps = false }: { showFps?: boolean }) => {
   const canvasRef = useCursorTrail(
     {
       numBalls: 1200,
-      initialBallColor,
       lerpFactor: 0.75,
     },
     [targetRect, anotherTargetRect, footerLinkRect],
