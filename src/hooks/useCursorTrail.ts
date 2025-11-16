@@ -56,12 +56,30 @@ interface UseCursorTrailOptions {
   initialBallColor?: string
   endBallColor?: string
   initialBallRadius?: number
-  fillAnimationSpeed?: number
+  fillAnimationSpeeds?: [number, number]
 }
 
 interface RectFillState {
   progress: number
   isInside: boolean
+  entryPoint: Coordinate
+  exitPoint: Coordinate
+}
+
+const isBallInsideRect = (ball: Ball, rects?: Rect[]): boolean => {
+  if (!rects || rects.length === 0) return false
+  for (let i = 0; i < rects.length; i++) {
+    const rect = rects[i]
+    if (
+      ball.x + ball.radius >= rect.left &&
+      ball.x - ball.radius <= rect.right &&
+      ball.y + ball.radius >= rect.top &&
+      ball.y - ball.radius <= rect.bottom
+    ) {
+      return true
+    }
+  }
+  return false
 }
 
 const useBalls = (options?: UseCursorTrailOptions) => {
@@ -90,61 +108,65 @@ const useBalls = (options?: UseCursorTrailOptions) => {
   const cursor = useCursor()
   const { isMoving, updateCursorMovement } = useDetectCursorMovement()
 
-  const updateBalls = useCallback(() => {
-    if (!cursor) return
+  const updateBalls = useCallback(
+    (fillRects?: Rect[]) => {
+      if (!cursor) return
 
-    updateCursorMovement()
+      updateCursorMovement()
 
-    if (cursor.hasMoved && balls[0].x === 0 && balls[0].y === 0) {
-      // Initialize all balls to the cursor position on first move
+      if (cursor.hasMoved && balls[0].x === 0 && balls[0].y === 0) {
+        // Initialize all balls to the cursor position on first move
+        for (let i = 0; i < numBalls; i++) {
+          balls[i].x = cursor.x
+          balls[i].y = cursor.y
+          ballTargets[i].x = cursor.x
+          ballTargets[i].y = cursor.y
+        }
+      }
+
+      // Update the target position of the first ball to the cursor position
+      ballTargets[0].x = cursor.x
+      ballTargets[0].y = cursor.y
+
+      let lastRadius = initialBallRadius
+      const colorMixer = mix(initialBallColor, endBallColor ?? "")
+
+      // Update the positions of the balls based on their targets
       for (let i = 0; i < numBalls; i++) {
-        balls[i].x = cursor.x
-        balls[i].y = cursor.y
-        ballTargets[i].x = cursor.x
-        ballTargets[i].y = cursor.y
+        const target = ballTargets[i]
+        const ball = balls[i]
+        const isBallInsideAFillRect = isBallInsideRect(ball, fillRects)
+        const radius = isMoving.current
+          ? lastRadius * (1 - i / numBalls)
+          : lerp(ball.radius, 0, 0.1)
+        lastRadius = radius
+        ball.color = endBallColor
+          ? colorMixer(hugeEaseOut(i / numBalls))
+          : initialBallColor
+
+        ball.x = lerp(ball.x, target.x, lerpFactor)
+        ball.y = lerp(ball.y, target.y, lerpFactor)
+        ball.radius = isBallInsideAFillRect ? 0 : radius
+
+        if (i < numBalls - 1) {
+          ballTargets[i + 1].x = ball.x
+          ballTargets[i + 1].y = ball.y
+        }
       }
-    }
-
-    // Update the target position of the first ball to the cursor position
-    ballTargets[0].x = cursor.x
-    ballTargets[0].y = cursor.y
-
-    let lastRadius = initialBallRadius
-    const colorMixer = mix(initialBallColor, endBallColor ?? "")
-
-    // Update the positions of the balls based on their targets
-    for (let i = 0; i < numBalls; i++) {
-      const target = ballTargets[i]
-      const ball = balls[i]
-      const radius = isMoving.current
-        ? lastRadius * (1 - i / numBalls)
-        : lerp(ball.radius, 0, 0.1)
-      lastRadius = radius
-      ball.color = endBallColor
-        ? colorMixer(hugeEaseOut(i / numBalls))
-        : initialBallColor
-
-      ball.x = lerp(ball.x, target.x, lerpFactor)
-      ball.y = lerp(ball.y, target.y, lerpFactor)
-      ball.radius = radius
-
-      if (i < numBalls - 1) {
-        ballTargets[i + 1].x = ball.x
-        ballTargets[i + 1].y = ball.y
-      }
-    }
-  }, [
-    balls,
-    ballTargets,
-    cursor,
-    lerpFactor,
-    numBalls,
-    updateCursorMovement,
-    initialBallRadius,
-    isMoving,
-    initialBallColor,
-    endBallColor,
-  ])
+    },
+    [
+      balls,
+      ballTargets,
+      cursor,
+      lerpFactor,
+      numBalls,
+      updateCursorMovement,
+      initialBallRadius,
+      isMoving,
+      initialBallColor,
+      endBallColor,
+    ],
+  )
 
   return {
     balls,
@@ -178,7 +200,8 @@ export const useCursorTrail = (
 ): RefObject<HTMLCanvasElement | null> => {
   const { balls, updateBalls } = useBalls(options)
   const shouldReduceMotion = useReducedMotion()
-  const fillAnimationSpeed = options?.fillAnimationSpeed ?? 0.08
+  const enterFillAnimationSpeed = options?.fillAnimationSpeeds?.[0] ?? 0.08
+  const exitFillAnimationSpeed = options?.fillAnimationSpeeds?.[1] ?? 0.2
 
   // Track fill state for each rect
   const rectFillStates = useConstant(() => new Map<Rect, RectFillState>())
@@ -196,7 +219,7 @@ export const useCursorTrail = (
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     ctx.clearRect(0, 0, canvasElement.width, canvasElement.height)
 
-    updateBalls()
+    updateBalls(fillTargetRects)
 
     // Draw and animate rect fills with growing circle
     if (fillTargetRects && fillTargetRects.length > 0) {
@@ -205,18 +228,25 @@ export const useCursorTrail = (
 
         // Initialize fill state if needed
         if (!rectFillStates.has(rect)) {
-          rectFillStates.set(rect, { progress: 0, isInside: false })
+          rectFillStates.set(rect, {
+            progress: 0,
+            isInside: false,
+            entryPoint: { x: rect.left, y: rect.bottom },
+            exitPoint: { x: rect.left, y: rect.bottom },
+          })
         }
 
         const fillState = rectFillStates.get(rect)!
 
-        // Update fill progress
+        // Update fill progress and capture entry/exit points
         if (isInside && !fillState.isInside) {
-          // Just entered
+          // Just entered - capture cursor position as entry point
           fillState.isInside = true
+          fillState.entryPoint = { x: cursor.x, y: cursor.y }
         } else if (!isInside && fillState.isInside) {
-          // Just exited
+          // Just exited - capture last cursor position as exit point
           fillState.isInside = false
+          fillState.exitPoint = { x: cursor.x, y: cursor.y }
         }
 
         // Animate progress
@@ -224,20 +254,36 @@ export const useCursorTrail = (
         fillState.progress = lerp(
           fillState.progress,
           targetProgress,
-          fillAnimationSpeed,
+          isInside ? enterFillAnimationSpeed : exitFillAnimationSpeed,
         )
 
-        // Draw growing circle fill from lower left
+        // Draw growing/shrinking circle fill
         if (fillState.progress > 0.01) {
           const fillColor = options?.initialBallColor || "rgba(128, 0, 128, 0)"
 
-          // Calculate circle origin (lower left corner)
-          const originX = rect.left
-          const originY = rect.bottom
+          // Use entry point when growing, exit point when shrinking
+          const originX = fillState.isInside
+            ? fillState.entryPoint.x
+            : fillState.exitPoint.x
+          const originY = fillState.isInside
+            ? fillState.entryPoint.y
+            : fillState.exitPoint.y
 
-          // Calculate the radius needed to fill the entire rect from lower left
-          // This is the distance to the farthest corner (top right)
-          const maxRadius = Math.sqrt(rect.width ** 2 + rect.height ** 2)
+          // Calculate the radius needed to fill the entire rect from the origin point
+          // Find the farthest corner from the origin
+          const corners = [
+            { x: rect.left, y: rect.top },
+            { x: rect.right, y: rect.top },
+            { x: rect.left, y: rect.bottom },
+            { x: rect.right, y: rect.bottom },
+          ]
+
+          const maxRadius = Math.max(
+            ...corners.map((corner) =>
+              Math.sqrt((corner.x - originX) ** 2 + (corner.y - originY) ** 2),
+            ),
+          )
+
           const currentRadius = maxRadius * fillState.progress
 
           // Use clipping to constrain circle to rect bounds
@@ -246,7 +292,7 @@ export const useCursorTrail = (
           ctx.rect(rect.left, rect.top, rect.width, rect.height)
           ctx.clip()
 
-          // Draw the growing circle
+          // Draw the growing/shrinking circle
           ctx.fillStyle = fillColor
           ctx.beginPath()
           ctx.arc(originX, originY, currentRadius, 0, Math.PI * 2)
