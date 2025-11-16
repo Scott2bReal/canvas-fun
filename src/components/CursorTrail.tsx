@@ -55,7 +55,7 @@ export const CursorTrail = ({ showFps = false }: { showFps?: boolean }) => {
       <AnimatePresence mode="popLayout">
         {showForm && (
           <motion.div
-            className="fixed origin-top-left top-4 left-4 z-50 bg-medium-green pt-8 p-4 text-yellow flex flex-col gap-4"
+            className="fixed origin-top-left top-4 left-4 z-50 bg-medium-green pt-8 p-4 text-yellow flex flex-col gap-4 cursor-default"
             initial={{ scale: 0.0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.0, opacity: 0 }}

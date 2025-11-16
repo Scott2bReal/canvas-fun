@@ -8,7 +8,7 @@ function App() {
     <MotionConfig reducedMotion="user">
       <WindowSizeProvider>
         <CursorStoreProvider>
-          <main className="relative flex flex-col justify-center items-center w-screen h-screen bg-ochre">
+          <main className="cursor-none relative flex flex-col justify-center items-center w-screen h-screen bg-ochre">
             <CursorTrail />
           </main>
         </CursorStoreProvider>
