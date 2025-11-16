@@ -1,6 +1,5 @@
 /** @type {import("prettier").Config} */
 export default {
-  plugins: ["prettier-plugin-organize-imports"],
-  pluginSearchDirs: false,
+  plugins: ["prettier-plugin-tailwindcss", "prettier-plugin-organize-imports"],
   semi: false,
 }

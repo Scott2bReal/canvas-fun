@@ -1,5 +1,5 @@
 import { mix } from "motion"
-import { useReducedMotion } from "motion/react"
+import { useReducedMotionConfig } from "motion/react"
 import { useCallback, useRef, type RefObject } from "react"
 import { proxy } from "valtio"
 import { hugeEaseOut, lerp } from "../utils/interpolation"
@@ -199,7 +199,7 @@ export const useCursorTrail = (
   fillTargetRects?: Rect[],
 ): RefObject<HTMLCanvasElement | null> => {
   const { balls, updateBalls } = useBalls(options)
-  const shouldReduceMotion = useReducedMotion()
+  const shouldReduceMotion = useReducedMotionConfig()
   const enterFillAnimationSpeed = options?.fillAnimationSpeeds?.[0] ?? 0.08
   const exitFillAnimationSpeed = options?.fillAnimationSpeeds?.[1] ?? 0.2
 
@@ -271,7 +271,7 @@ export const useCursorTrail = (
 
           // Calculate the radius needed to fill the entire rect from the origin point
           // Find the farthest corner from the origin
-          const corners = [
+          const corners: Coordinate[] = [
             { x: rect.left, y: rect.top },
             { x: rect.right, y: rect.top },
             { x: rect.left, y: rect.bottom },
@@ -286,13 +286,13 @@ export const useCursorTrail = (
 
           const currentRadius = maxRadius * fillState.progress
 
-          // Use clipping to constrain circle to rect bounds
+          // Clip the circle to rect boundaries
           ctx.save()
           ctx.beginPath()
           ctx.rect(rect.left, rect.top, rect.width, rect.height)
           ctx.clip()
 
-          // Draw the growing/shrinking circle
+          // Draw the circle
           ctx.fillStyle = fillColor
           ctx.beginPath()
           ctx.arc(originX, originY, currentRadius, 0, Math.PI * 2)
