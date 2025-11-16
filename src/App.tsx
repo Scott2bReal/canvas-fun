@@ -7,7 +7,7 @@ function App() {
   return (
     <WindowSizeProvider>
       <CursorStoreProvider>
-        <main className="relative w-full h-[150vh] flex items-center justify-center bg-ochre">
+        <main className="relative w-screen h-screen bg-ochre">
           <CursorTrail />
           {/* <PathingExample /> */}
         </main>
