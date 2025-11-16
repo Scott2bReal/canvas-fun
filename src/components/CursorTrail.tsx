@@ -121,10 +121,13 @@ export const CursorTrail = ({ showFps = false }: { showFps?: boolean }) => {
         className="fixed inset-0 w-screen h-screen z-10 pointer-events-none"
       />
       <div className="flex md:flex-row flex-col gap-32 md:gap-64 items-center">
-        <div ref={targetRef} className="size-64 border border-dark-green"></div>
+        <div
+          ref={targetRef}
+          className="size-32 md:size-64 border border-dark-green"
+        ></div>
         <div
           ref={anotherTargetRef}
-          className="size-64 border border-dark-green"
+          className="size-32 md:size-64 border border-dark-green"
         ></div>
       </div>
       {showFps && (
