@@ -1,6 +1,6 @@
 import { MotionConfig } from "motion/react"
 import { CursorStoreProvider } from "./components/CursorStoreProvider"
-import { CursorTrail } from "./components/CursorTrail"
+import { Main } from "./components/Main"
 import { WindowSizeProvider } from "./components/WindowSizeProvider"
 
 function App() {
@@ -8,9 +8,7 @@ function App() {
     <MotionConfig reducedMotion="user">
       <WindowSizeProvider>
         <CursorStoreProvider>
-          <main className="cursor-none relative flex flex-col justify-center items-center w-screen h-screen bg-ochre">
-            <CursorTrail />
-          </main>
+          <Main />
         </CursorStoreProvider>
       </WindowSizeProvider>
     </MotionConfig>

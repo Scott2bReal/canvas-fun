@@ -1,4 +1,9 @@
-import { AnimatePresence, motion, useAnimationFrame } from "motion/react"
+import {
+  AnimatePresence,
+  motion,
+  useAnimationFrame,
+  useReducedMotionConfig,
+} from "motion/react"
 import { useEffect, useRef, useState } from "react"
 import { useCursorTrail } from "../hooks/useCursorTrail"
 import { useDomRect } from "../hooks/useDomRect"
@@ -20,6 +25,8 @@ export const CursorTrail = ({ showFps = false }: { showFps?: boolean }) => {
 
   const [showForm, setShowForm] = useState<boolean>(false)
   const toggleForm = () => setShowForm((prev) => !prev)
+
+  const shouldReduceMotion = useReducedMotionConfig()
 
   const canvasRef = useCursorTrail(
     {
@@ -112,7 +119,7 @@ export const CursorTrail = ({ showFps = false }: { showFps?: boolean }) => {
         ref={formButtonRef}
         onClick={toggleForm}
         title={`${showForm ? "Close" : "Open"} controls`}
-        className={`text-sm py-1 px-3 top-4 transition duration-300  ${showForm ? "border border-transparent" : "border border-medium-green"} left-4 z-50 ${showForm ? "text-yellow" : "text-dark-green hover:text-yellow"} fixed`}
+        className={`text-sm py-1 px-3 top-4 transition duration-300  ${showForm ? "border border-transparent" : "border border-medium-green"} left-4 z-50 ${showForm ? "text-yellow" : shouldReduceMotion ? "hover:text-dark-green" : "text-dark-green hover:text-yellow"} fixed`}
       >
         {showForm ? "-" : "+"}
       </button>
@@ -140,7 +147,7 @@ export const CursorTrail = ({ showFps = false }: { showFps?: boolean }) => {
         <a
           ref={footerLinkRef}
           href="https://github.com/Scott2bReal/canvas-fun"
-          className="inline-block p-4 hover:text-light-orange"
+          className={`inline-block p-4 ${shouldReduceMotion ? "hover:text-dark-green" : "hover:text-light-orange"}`}
           target="_blank"
           rel="noreferrer noopener"
         >
