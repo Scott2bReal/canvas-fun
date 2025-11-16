@@ -1,4 +1,6 @@
 import { createContext } from "react"
-import type { Coordinate } from "../utils/types"
+import { useCreateCursorStore } from "../hooks/useCursorStore"
 
-export const CursorContext = createContext<Coordinate | null>(null)
+export const CursorContext = createContext<ReturnType<
+  typeof useCreateCursorStore
+> | null>(null)
