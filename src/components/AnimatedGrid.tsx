@@ -6,6 +6,7 @@ import { useCanvas } from "../hooks/useCanvas"
 import { useConstant } from "../hooks/useConstant"
 import { useDomRect, type Rect } from "../hooks/useDomRect"
 import { useGridContext } from "../hooks/useGridContext"
+import { resizeIfNeeded } from "../utils/canvas"
 
 const Square = ({ number }: { number: number }) => {
   const [isExpanded, setIsExpanded] = useState(false)
@@ -29,7 +30,6 @@ const Square = ({ number }: { number: number }) => {
     <div className="flex flex-col">
       <motion.div
         ref={ref}
-        layout
         onClick={() => expand()}
         className="h-16 w-32 bg-blue-500"
       ></motion.div>
@@ -83,21 +83,46 @@ const GridInner = () => {
   const { gridRects } = useGridContext()
   const gridRectsSnap = useSnapshot(gridRects)
 
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const containerRect = useDomRect(containerRef)
+
+  // Store initial center in canvas-relative coordinates
+  const initialCenterRef = useRef<{ x: number; y: number } | null>(null)
+
+  useEffect(() => {
+    if (
+      !initialCenterRef.current &&
+      containerRect.width > 0 &&
+      containerRect.height > 0
+    ) {
+      initialCenterRef.current = {
+        x: containerRect.width / 2,
+        y: containerRect.height / 2,
+      }
+    }
+  }, [containerRect.width, containerRect.height])
+
   const draw = useCallback(
     (ctx: CanvasRenderingContext2D, canvasElement: HTMLCanvasElement) => {
+      resizeIfNeeded(canvasElement)
+
       const dpr = window.devicePixelRatio || 1
       const width = canvasElement.width / dpr
       const height = canvasElement.height / dpr
       ctx.clearRect(0, 0, width, height)
 
-      const centerX = width / 2
-      const centerY = height / 2
+      // Use stored initial center, fallback to current center
+      const centerX = initialCenterRef.current?.x ?? width / 2
+      const centerY = initialCenterRef.current?.y ?? height / 2
 
       const drawLineToSquare = (rect: ReturnType<typeof useDomRect>) => {
+        // Convert viewport coordinates to canvas-relative coordinates
+        const relativeX = rect.centerX - containerRect.left
+        const relativeY = rect.centerY - containerRect.top
+
         ctx.beginPath()
         ctx.moveTo(centerX, centerY)
-
-        ctx.lineTo(rect.centerX, rect.centerY)
+        ctx.lineTo(relativeX, relativeY)
 
         ctx.strokeStyle = "red"
         ctx.lineWidth = 2
@@ -108,17 +133,20 @@ const GridInner = () => {
         drawLineToSquare(rect)
       })
     },
-    [gridRectsSnap],
+    [gridRectsSnap, containerRect],
   )
 
   const canvasRef = useCanvas(draw)
 
   return (
     <>
-      <div className="grid relative grid-cols-2 z-0 w-fit mx-auto gap-x-24 gap-y-4 mt-20 items-start">
+      <div
+        ref={containerRef}
+        className="grid relative grid-cols-2 z-0 w-fit mx-auto gap-x-24 gap-y-4 mt-20 items-start"
+      >
         <canvas
           ref={canvasRef}
-          className="absolute top-0 z-10 left-0 w-full h-full pointer-events-none border border-lime-500"
+          className="absolute top-0 z-10 left-0 w-full h-full pointer-events-none border border-purple-500"
         />
         {[...Array(8)].map((_, i) => (
           <Square number={i} key={i}></Square>
@@ -139,7 +167,9 @@ export const Grid = () => {
       }}
     >
       <MotionConfig reducedMotion="user">
-        <GridInner />
+        <div className="size-full">
+          <GridInner />
+        </div>
       </MotionConfig>
     </GridContext.Provider>
   )

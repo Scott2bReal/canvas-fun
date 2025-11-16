@@ -17,7 +17,6 @@ export function useCanvas(
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) throw new CanvasError("Canvas element not found")
-
     const ctx = canvas.getContext("2d")
     if (!ctx) throw new CanvasError("2D context not available")
 
@@ -26,15 +25,15 @@ export function useCanvas(
     const resizeCanvas = () => {
       canvas.width = canvasRect.width * dpr
       canvas.height = canvasRect.height * dpr
-      ctx.scale(dpr, dpr)
     }
 
     resizeCanvas()
 
     let animationId: number
     const render = () => {
-      draw(ctx, canvas)
+      resizeCanvas()
       animationId = requestAnimationFrame(render)
+      draw(ctx, canvas)
     }
 
     render()
