@@ -82,11 +82,13 @@ const isBallInsideRect = (ball: Ball, rects?: Rect[]): boolean => {
   return false
 }
 
+const DEFAULT_BALL_COLOR = "#465946"
+
 const useBalls = (options?: UseCursorTrailOptions) => {
   const {
     numBalls = 4000,
     lerpFactor = 0.85,
-    initialBallColor = "rgba(128, 0, 128, 1)",
+    initialBallColor = DEFAULT_BALL_COLOR,
     endBallColor,
     initialBallRadius = 10,
   } = options ?? {}
@@ -129,7 +131,10 @@ const useBalls = (options?: UseCursorTrailOptions) => {
       ballTargets[0].y = cursor.y
 
       let lastRadius = initialBallRadius
-      const colorMixer = mix(initialBallColor, endBallColor ?? "")
+      const colorMixer = mix(
+        initialBallColor,
+        endBallColor ?? DEFAULT_BALL_COLOR,
+      )
 
       // Update the positions of the balls based on their targets
       for (let i = 0; i < numBalls; i++) {
@@ -259,7 +264,7 @@ export const useCursorTrail = (
 
         // Draw growing/shrinking circle fill
         if (fillState.progress > 0.01) {
-          const fillColor = options?.initialBallColor || "rgba(128, 0, 128, 0)"
+          const fillColor = options?.initialBallColor || DEFAULT_BALL_COLOR
 
           // Use entry point when growing, exit point when shrinking
           const originX = fillState.isInside
