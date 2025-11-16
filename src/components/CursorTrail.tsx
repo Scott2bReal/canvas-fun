@@ -64,7 +64,10 @@ export const CursorTrail = ({ showFps = false }: { showFps?: boolean }) => {
               duration: 0.3,
             }}
           >
-            <form className="mt-4 size-fit origin-top-left">
+            <h2 className="font-italic font-bold text-yellow w-full text-center mt-4">
+              Cursor Trail Controls
+            </h2>
+            <form className="mt-2 size-fit">
               <label className="flex flex-col">
                 Number of Balls: {numBalls}
                 <input
@@ -134,7 +137,7 @@ export const CursorTrail = ({ showFps = false }: { showFps?: boolean }) => {
         <a
           ref={footerLinkRef}
           href="https://github.com/Scott2bReal/canvas-fun"
-          className="inline-block p-4 hover:text-yellow"
+          className="inline-block p-4 hover:text-light-orange"
           target="_blank"
           rel="noreferrer noopener"
         >
