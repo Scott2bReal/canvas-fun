@@ -11,13 +11,16 @@ export const CursorTrail = ({ showFps = false }: { showFps?: boolean }) => {
   const targetRect = useDomRect(targetRef)
   const anotherTargetRef = useRef<HTMLDivElement>(null)
   const anotherTargetRect = useDomRect(anotherTargetRef)
+  const footerRef = useRef<HTMLElement>(null)
+  const footerRect = useDomRect(footerRef)
+
   const canvasRef = useCursorTrail(
     {
       numBalls: 1200,
       initialBallColor,
       lerpFactor: 0.75,
     },
-    [targetRect, anotherTargetRect],
+    [targetRect, anotherTargetRect, footerRect],
   )
 
   useAnimationFrame((_t, delta) => {
@@ -47,6 +50,19 @@ export const CursorTrail = ({ showFps = false }: { showFps?: boolean }) => {
           ref={jsonRef}
         ></pre>
       )}
+      <footer
+        ref={footerRef}
+        className="absolute hover:text-yellow bottom-4 text-sm text-medium-green z-50"
+      >
+        <a
+          className="p-4 inline-block"
+          target="_blank"
+          rel="noopener noreferrer"
+          href="https://github.com/Scott2bReal/canvas-fun"
+        >
+          GitHub
+        </a>
+      </footer>
     </>
   )
 }
